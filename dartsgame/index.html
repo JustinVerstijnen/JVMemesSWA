@@ -46,6 +46,7 @@
         <h2>Beurt: <span id="currentPlayer">Speler 1</span></h2>
         <div id="scores"></div>
         <p>Laatste worp: <span id="lastThrow">-</span></p>
+        <p>Pijlen resterend: <span id="dartsLeft">3</span></p>
     </div>
 
     <canvas id="dartboard" width="500" height="500" style="display:none;"></canvas>
@@ -56,7 +57,9 @@
         let scores = [];
         let currentPlayer = 0;
         let gameActive = false;
-
+        let dartsLeft = 3;
+        const missChance = 5; // pixels afwijking max
+        
         const canvas = document.getElementById("dartboard");
         const ctx = canvas.getContext("2d");
 
@@ -64,6 +67,7 @@
             numPlayers = parseInt(document.getElementById("players").value);
             scores = Array(numPlayers).fill(501);
             currentPlayer = 0;
+            dartsLeft = 3;
             gameActive = true;
             document.getElementById("scoreboard").style.display = "block";
             document.getElementById("dartboard").style.display = "block";
@@ -78,48 +82,97 @@
                 html += `<p>Speler ${i+1} score: ${s}</p>`;
             });
             document.getElementById("scores").innerHTML = html;
+            document.getElementById("dartsLeft").innerText = dartsLeft;
         }
 
         function drawBoard() {
             ctx.clearRect(0, 0, 500, 500);
             const centerX = 250, centerY = 250;
-
-            // Teken sectoren
+            
             for (let i = 0; i < 20; i++) {
                 let start = (i * 18 - 9) * Math.PI/180;
                 let end = ((i+1) * 18 - 9) * Math.PI/180;
-
+                
+                // buitenste dubbel ring
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, 250, start, end);
-                ctx.fillStyle = i % 2 === 0 ? "#222" : "#fff";
+                ctx.arc(centerX, centerY, 230, end, start, true);
+                ctx.closePath();
+                ctx.fillStyle = i % 2 === 0 ? "#ff0000" : "#008000";
                 ctx.fill();
-
+                
+                // single buiten
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, 210, start, end);
-                ctx.fillStyle = i % 2 === 0 ? "#fff" : "#222";
+                ctx.arc(centerX, centerY, 230, start, end);
+                ctx.arc(centerX, centerY, 170, end, start, true);
+                ctx.closePath();
+                ctx.fillStyle = i % 2 === 0 ? "#fff" : "#000";
+                ctx.fill();
+                
+                // triple ring
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, 170, start, end);
+                ctx.arc(centerX, centerY, 150, end, start, true);
+                ctx.closePath();
+                ctx.fillStyle = i % 2 === 0 ? "#ff0000" : "#008000";
+                ctx.fill();
+                
+                // single binnen
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, 150, start, end);
+                ctx.arc(centerX, centerY, 25, end, start, true);
+                ctx.closePath();
+                ctx.fillStyle = i % 2 === 0 ? "#fff" : "#000";
                 ctx.fill();
             }
 
-            // Triple ring
-            ctx.beginPath(); ctx.arc(centerX, centerY, 170, 0, 2 * Math.PI); ctx.fillStyle = "#000"; ctx.fill();
-            ctx.beginPath(); ctx.arc(centerX, centerY, 190, 0, 2 * Math.PI); ctx.fillStyle = "transparent"; ctx.strokeStyle="#333"; ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 25, 0, 2 * Math.PI);
+            ctx.fillStyle = "#008000";
+            ctx.fill();
 
-            // Double ring
-            ctx.beginPath(); ctx.arc(centerX, centerY, 230, 0, 2 * Math.PI); ctx.fillStyle = "#000"; ctx.fill();
-            ctx.beginPath(); ctx.arc(centerX, centerY, 250, 0, 2 * Math.PI); ctx.fillStyle = "transparent"; ctx.strokeStyle="#333"; ctx.stroke();
-
-            // Bull en bullseye
-            ctx.beginPath(); ctx.arc(centerX, centerY, 25, 0, 2 * Math.PI); ctx.fillStyle = "#0f0"; ctx.fill();
-            ctx.beginPath(); ctx.arc(centerX, centerY, 10, 0, 2 * Math.PI); ctx.fillStyle = "#f00"; ctx.fill();
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 10, 0, 2 * Math.PI);
+            ctx.fillStyle = "#ff0000";
+            ctx.fill();
         }
 
         canvas.addEventListener("click", function(e) {
             if (!gameActive) return;
             const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left - 250;
-            const y = e.clientY - rect.top - 250;
+            let x = e.clientX - rect.left - 250;
+            let y = e.clientY - rect.top - 250;
+
+            // Miss chance afwijking
+            x += (Math.random() * 2 - 1) * missChance;
+            y += (Math.random() * 2 - 1) * missChance;
+            animateThrow(x, y);
+        });
+
+        function animateThrow(x, y) {
+            let frames = 20;
+            let currentFrame = 0;
+            const interval = setInterval(() => {
+                drawBoard();
+                const fx = (x/frames) * currentFrame + 250;
+                const fy = (y/frames) * currentFrame + 250;
+                ctx.beginPath();
+                ctx.arc(fx, fy, 5, 0, 2*Math.PI);
+                ctx.fillStyle = "yellow";
+                ctx.fill();
+                currentFrame++;
+                if (currentFrame > frames) {
+                    clearInterval(interval);
+                    calculateScore(x, y);
+                }
+            }, 20);
+        }
+
+        function calculateScore(x, y) {
             const distance = Math.sqrt(x*x + y*y);
             let angle = Math.atan2(-y, x) * 180 / Math.PI;
             if (angle < 0) angle += 360;
@@ -129,30 +182,39 @@
 
             if (distance <= 10) { baseScore = 50; multiplier = 1; }
             else if (distance <= 25) { baseScore = 25; multiplier = 1; }
-            else if (distance >= 230) multiplier = 2; // double ring
-            else if (distance >= 170 && distance <= 190) multiplier = 3; // triple ring
+            else if (distance >= 230) multiplier = 2;
+            else if (distance >= 170 && distance <= 190) multiplier = 3;
 
             let throwScore = baseScore * multiplier;
             document.getElementById("lastThrow").innerText = `${baseScore} x${multiplier} = ${throwScore}`;
 
-            // double-out check
             let newScore = scores[currentPlayer] - throwScore;
             if (newScore < 0) {
-                alert("Bust! Je score gaat terug naar begin van deze beurt.");
+                alert("Bust! Beurt voorbij.");
+                endTurn();
             } else if (newScore === 0) {
                 if (multiplier === 2 || baseScore === 50) {
                     alert("Speler " + (currentPlayer + 1) + " wint!");
                     gameActive = false;
-                    return;
                 } else {
                     alert("Je moet uitgooien op een dubbel!");
+                    endTurn();
                 }
             } else {
                 scores[currentPlayer] = newScore;
-                currentPlayer = (currentPlayer + 1) % numPlayers;
+                dartsLeft--;
+                if (dartsLeft === 0) {
+                    endTurn();
+                }
             }
             updateScores();
-        });
+        }
+
+        function endTurn() {
+            dartsLeft = 3;
+            currentPlayer = (currentPlayer + 1) % numPlayers;
+            updateScores();
+        }
     </script>
 </body>
 </html>
