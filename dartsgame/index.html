@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Dartspel voor 2 spelers</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .scoreboard {
+            margin: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dartspel: 501 punten</h1>
+    <div class="scoreboard">
+        <h2>Beurt: <span id="currentPlayer">Speler 1</span></h2>
+        <p>Speler 1 score: <span id="score1">501</span></p>
+        <p>Speler 2 score: <span id="score2">501</span></p>
+        <p>Laatste worp: <span id="lastThrow">-</span></p>
+    </div>
+    <button onclick="throwDart()">Gooi dart</button>
+    <button onclick="resetGame()">Reset spel</button>
+
+    <script>
+        let scores = [501, 501];
+        let currentPlayer = 0;
+
+        function throwDart() {
+            const throwScore = Math.floor(Math.random() * 61); // 0 tot 60
+            document.getElementById("lastThrow").innerText = throwScore;
+
+            if (scores[currentPlayer] - throwScore >= 0) {
+                scores[currentPlayer] -= throwScore;
+            }
+
+            updateScores();
+
+            if (scores[currentPlayer] === 0) {
+                alert("Speler " + (currentPlayer + 1) + " wint!");
+                resetGame();
+                return;
+            }
+
+            // Wissel van speler
+            currentPlayer = 1 - currentPlayer;
+            document.getElementById("currentPlayer").innerText = "Speler " + (currentPlayer + 1);
+        }
+
+        function updateScores() {
+            document.getElementById("score1").innerText = scores[0];
+            document.getElementById("score2").innerText = scores[1];
+        }
+
+        function resetGame() {
+            scores = [501, 501];
+            currentPlayer = 0;
+            updateScores();
+            document.getElementById("currentPlayer").innerText = "Speler 1";
+            document.getElementById("lastThrow").innerText = "-";
+        }
+    </script>
+</body>
+</html>
