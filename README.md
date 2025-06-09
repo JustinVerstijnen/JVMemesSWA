@@ -8,9 +8,9 @@
 ## About
 
 **JVMemesSWA** is a simple meme gallery project built by [Justin Verstijnen](https://github.com/JustinVerstijnen).  
-It provides a clean, modern and responsive meme gallery with a minimal design, inspired by app-launcher aesthetics. The project is fully static and can be easily hosted on any web server or GitHub Pages.
+It provides a clean, modern and responsive meme gallery with a minimal design, inspired by app-launcher aesthetics. The project is fully static and can be easily hosted on Azure Static Web Apps, a custom web server or GitHub Pages.
 
-This project was mainly built for fun, learning, and personal meme organization.
+This project was mainly built for fun, learning, and personal meme organization. Also to share with friends.
 
 ## Features
 
