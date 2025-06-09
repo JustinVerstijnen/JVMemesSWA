@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="description" content="This is a joke page to show customers that an IT solution cannot be good, secure and cheap at once." />
+    <title>Sales tool - justinverstijnen.nl</title>
+    <style>
+        body {
+            background: #f0f0f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 40px;
+            color: #333;
+        }
+        .switch-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 90%;
+            max-width: 400px;
+        }
+        .switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 25px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            font-size: 1.4rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .switch:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+        }
+        .toggle {
+            position: relative;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #88B0DC;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        footer {
+            position: absolute;
+            bottom: 7px;
+            font-size: 6px;
+            color: #888;
+            text-align: center;
+        }
+        footer a {
+            color: #888;
+            text-decoration: none;
+        }
+        @media (max-width: 500px) {
+            h1 {
+                font-size: 2rem;
+            }
+            .switch {
+                font-size: 1.1rem;
+                padding: 15px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>I want my IT Solution</h1>
+    <div class="switch-container">
+        <div class="switch">
+            <span>Good</span>
+            <label class="toggle">
+                <input type="checkbox" id="good">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="switch">
+            <span>Secure</span>
+            <label class="toggle">
+                <input type="checkbox" id="secure">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="switch">
+            <span>Cheap</span>
+            <label class="toggle">
+                <input type="checkbox" id="cheap">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <footer>
+        <a href="https://justinverstijnen.nl">justinverstijnen.nl</a>
+        <p>Made as a joke, don't take too seriously ;)</p>
+    </footer>
+
+    <script>
+        const switches = [
+            document.getElementById('good'),
+            document.getElementById('secure'),
+            document.getElementById('cheap')
+        ];
+
+        switches.forEach(sw => {
+            sw.addEventListener('change', () => {
+                const onSwitches = switches.filter(s => s.checked);
+                if (onSwitches.length > 2) {
+                    const justChanged = sw;
+                    const others = switches.filter(s => s !== justChanged && s.checked);
+                    if (others.length > 0) {
+                        others[0].checked = false;
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
