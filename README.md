@@ -28,7 +28,7 @@ This project was mainly built for fun, learning, and personal meme organization.
 
 ## Serious stuff
 
-You can find my serious and reall stuff on this website::  
+You can find my serious and real stuff on this website:
 **[https://justinverstijnen.nl](https://justinverstijnen.nl)**  
 
 ## License
