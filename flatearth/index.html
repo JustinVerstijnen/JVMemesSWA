@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flat Globe - justinverstijnen.nl</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: black;
+      cursor: pointer;
+    }
+    .fullscreen-gif {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover; 
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body onclick="startSound()">
+  <img src="flatearth.gif" alt="Tasty beer!" class="fullscreen-gif">
+</body>
+</html>
