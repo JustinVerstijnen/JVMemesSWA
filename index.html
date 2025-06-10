@@ -52,8 +52,20 @@
 
         .gallery {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .gallery {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .gallery {
+                grid-template-columns: 1fr;
+            }
         }
 
         .meme a {
@@ -101,8 +113,8 @@
 
 <header>
     <a href="https://justinverstijnen.nl">
-    <img src="https://justinverstijnen.nl/wp-content/uploads/2025/04/cropped-Logo-2.0-Transparant.png" alt="Logo">
-</a>
+        <img src="https://justinverstijnen.nl/wp-content/uploads/2025/04/cropped-Logo-2.0-Transparant.png" alt="Logo">
+    </a>
     <h1>Meme Gallery</h1>
     <p class="subtitle">A collection of my favorite memes</p>
 </header>
@@ -133,7 +145,7 @@
                 <div class="meme-title">Flat Earth</div>
             </a>
         </div>
-        <!-- Add more memes here -->
+        <!-- Add more memes when needed -->
     </div>
 </div>
 
