@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vakantie Counter</title>
+    <title>Vakantie Countdown</title>
     <style>
         * {
             margin: 0;
@@ -19,25 +19,31 @@
             align-items: center;
             height: 100vh;
             color: #333;
+            flex-direction: column;
         }
 
         .counter-container {
             text-align: center;
             background-color: #fff;
             border-radius: 10px;
-            padding: 30px;
+            padding: 20px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
         }
 
         h1 {
-            font-size: 2rem;
+            font-size: 1.8rem;
             margin-bottom: 20px;
         }
 
         .countdown {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: bold;
             letter-spacing: 1px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
         }
 
         .countdown span {
@@ -47,6 +53,16 @@
         #countdown {
             display: flex;
             justify-content: center;
+        }
+
+        .flag-container {
+            margin-top: 20px;
+        }
+
+        .flag-container img {
+            width: 100px;
+            height: auto;
+            border-radius: 5px;
         }
 
         @keyframes fadeIn {
@@ -61,16 +77,36 @@
         #countdown span {
             animation: fadeIn 1s ease-in-out;
         }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .countdown {
+                font-size: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.4rem;
+            }
+
+            .flag-container img {
+                width: 80px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="counter-container">
-        <h1>We zijn er bijna, nog:</h1>
+        <h1>Vakantie Countdown</h1>
         <div id="countdown" class="countdown">
             <span id="days"></span> dagen 
             <span id="hours"></span> uren 
             <span id="minutes"></span> minuten 
             <span id="seconds"></span> seconden
+        </div>
+
+        <!-- Kroatische vlag -->
+        <div class="flag-container">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/1/1b/Flag_of_Croatia.svg" alt="Kroatische Vlag">
         </div>
     </div>
 
