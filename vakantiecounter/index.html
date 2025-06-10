@@ -1,138 +1,110 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aftellen geblazen!</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f0f0f0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vakantie Counter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .clock {
-      display: flex;
-      font-size: 50px;
-      font-weight: bold;
-    }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
 
-    .flip-clock {
-      display: flex;
-      margin: 0 5px;
-      position: relative;
-      width: 80px;
-      height: 120px;
-      background: #2e2e2e;
-      border-radius: 10px;
-      overflow: hidden;
-      color: #fff;
-      justify-content: center;
-      align-items: center;
-    }
+        .counter-container {
+            text-align: center;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
 
-    .flip-clock .digit {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: transform 0.6s ease;
-    }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
 
-    .flip-clock .flip {
-      transform: rotateX(180deg);
-    }
+        .countdown {
+            font-size: 2.5rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
 
-    .flip-clock span {
-      position: absolute;
-      font-size: 40px;
-      z-index: 10;
-    }
+        .countdown span {
+            margin: 0 10px;
+        }
 
-    .flip-clock .flip span {
-      transform: rotateX(180deg);
-    }
-  </style>
+        #countdown {
+            display: flex;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        #countdown span {
+            animation: fadeIn 1s ease-in-out;
+        }
+    </style>
 </head>
 <body>
-
-  <div class="clock">
-    <div class="flip-clock" id="days">
-      <div class="digit">
-        <span>0</span>
-      </div>
-      <div class="digit flip">
-        <span>0</span>
-      </div>
-    </div> 
-    <div class="flip-clock" id="hours">
-      <div class="digit">
-        <span>0</span>
-      </div>
-      <div class="digit flip">
-        <span>0</span>
-      </div>
+    <div class="counter-container">
+        <h1>We zijn er bijna, nog:</h1>
+        <div id="countdown" class="countdown">
+            <span id="days"></span> dagen 
+            <span id="hours"></span> uren 
+            <span id="minutes"></span> minuten 
+            <span id="seconds"></span> seconden
+        </div>
     </div>
-    <div class="flip-clock" id="minutes">
-      <div class="digit">
-        <span>0</span>
-      </div>
-      <div class="digit flip">
-        <span>0</span>
-      </div>
-    </div>
-    <div class="flip-clock" id="seconds">
-      <div class="digit">
-        <span>0</span>
-      </div>
-      <div class="digit flip">
-        <span>0</span>
-      </div>
-    </div>
-  </div>
 
-  <script>
-    const targetDate = new Date("September 4, 2025 00:00:00").getTime();
+    <script>
+        // Zet de datum van de vakantie in
+        const vacationDate = new Date("September 4, 2025 00:00:00").getTime();
 
-    function updateCountdown() {
-      const now = new Date().getTime();
-      const distance = targetDate - now;
+        // Update de teller elke seconde
+        let countdownFunction = setInterval(function() {
 
-      if (distance <= 0) {
-        clearInterval(interval);
-        document.querySelector(".clock").innerHTML = "<h1>Vakantie is hier!</h1>";
-        return;
-      }
+            // Haal de huidige datum en tijd op
+            let now = new Date().getTime();
 
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            // Bereken het verschil tussen de vakantie en nu
+            let distance = vacationDate - now;
 
-      document.getElementById("days").innerHTML = formatFlipClock(days);
-      document.getElementById("hours").innerHTML = formatFlipClock(hours);
-      document.getElementById("minutes").innerHTML = formatFlipClock(minutes);
-      document.getElementById("seconds").innerHTML = formatFlipClock(seconds);
-    }
+            // Bereken de dagen, uren, minuten en seconden
+            let days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            let seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-    function formatFlipClock(value) {
-      const valueStr = value.toString().padStart(2, '0');
-      return `
-        <div class="digit"><span>${valueStr[0]}</span></div>
-        <div class="digit flip"><span>${valueStr[1]}</span></div>
-      `;
-    }
+            // Toon de resultaten in de HTML
+            document.getElementById("days").innerHTML = days;
+            document.getElementById("hours").innerHTML = hours;
+            document.getElementById("minutes").innerHTML = minutes;
+            document.getElementById("seconds").innerHTML = seconds;
 
-    const interval = setInterval(updateCountdown, 1000);
-  </script>
-
+            // Als de vakantie is bereikt, toon een bericht
+            if (distance < 0) {
+                clearInterval(countdownFunction);
+                document.getElementById("countdown").innerHTML = "Vakantie is begonnen!";
+            }
+        }, 1000);
+    </script>
 </body>
 </html>
