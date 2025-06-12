@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sparerib Countdown</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fff3e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .counter-container {
+            text-align: center;
+            background-color: #fff8f0;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            z-index: 2;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        .countdown {
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .countdown span {
+            margin: 0 10px;
+        }
+
+        .sparerib-container {
+            margin-top: 20px;
+        }
+
+        .sparerib-container img {
+            width: 100px;
+            height: auto;
+            border-radius: 5px;
+        }
+
+        #countdown span {
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* Vliegende sparerib */
+        .flying-sparerib {
+            position: absolute;
+            top: 50%;
+            left: -150px;
+            width: 100px;
+            height: auto;
+            z-index: 1;
+            pointer-events: none;
+            animation: fly 10s linear infinite;
+        }
+
+        @keyframes fly {
+            0% {
+                transform: translateX(-200px) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(120vw) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .countdown {
+                font-size: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.4rem;
+            }
+
+            .sparerib-container img {
+                width: 80px;
+            }
+
+            .flying-sparerib {
+                width: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <img class="flying-sparerib" src="https://upload.wikimedia.org/wikipedia/commons/2/2e/Ribs_Barbeque.jpg" alt="Sparerib">
+
+    <div class="counter-container">
+        <h1>Sparerib Countdown</h1>
+        <div id="countdown" class="countdown">
+            <span id="days"></span>:
+            <span id="hours"></span>:
+            <span id="minutes"></span>:
+            <span id="seconds"></span>
+        </div>
+
+        <div class="sparerib-container">
+            <a href="https://nl.wikipedia.org/wiki/Sparerib"><img src="https://upload.wikimedia.org/wikipedia/commons/2/2e/Ribs_Barbeque.jpg" alt="Sparerib"></a>
+        </div>
+    </div>
+
+    <script>
+        // Zet de datum van de vakantie in
+        const vacationDate = new Date("September 4, 2025 00:00:00").getTime();
+
+        // Update de teller elke seconde
+        let countdownFunction = setInterval(function () {
+            let now = new Date().getTime();
+            let distance = vacationDate - now;
+
+            let days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("days").innerHTML = days;
+            document.getElementById
