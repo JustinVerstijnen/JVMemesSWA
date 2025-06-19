@@ -2,33 +2,38 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Mijn Concerten</title>
   <link rel="stylesheet" href="styles.css">
   <script src="script.js" defer></script>
 </head>
 <body>
-  <h1 style="text-align: center;">Mijn Concerten</h1>
-  <div class="concert-list">
-
-    <div class="concert" data-datetime="2025-07-10T20:00:00">
-      <h3>Coldplay – Ziggo Dome</h3>
-      <p>Amsterdam</p>
-      <p class="countdown"></p>
+  <header><h1>Mijn Concerten</h1></header>
+  <main class="concert-list">
+    <!-- Voorbeeld 1 -->
+    <div class="concert-card" data-datetime="2025-07-10T20:00:00">
+      <div class="info">
+        <h2>Coldplay</h2>
+        <p>Ziggo Dome – Amsterdam</p>
+        <div class="countdown"></div>
+      </div>
     </div>
-
-    <div class="concert" data-datetime="2025-08-15T19:30:00">
-      <h3>Dua Lipa – Ahoy Rotterdam</h3>
-      <p>Rotterdam</p>
-      <p class="countdown"></p>
+    <!-- Voorbeeld 2 -->
+    <div class="concert-card" data-datetime="2025-08-15T19:30:00">
+      <div class="info">
+        <h2>Dua Lipa</h2>
+        <p>Ahoy – Rotterdam</p>
+        <div class="countdown"></div>
+      </div>
     </div>
-
-    <div class="concert" data-datetime="2025-09-01T21:00:00">
-      <h3>Arctic Monkeys – Goffertpark</h3>
-      <p>Nijmegen</p>
-      <p class="countdown"></p>
+    <!-- Voorbeeld 3 -->
+    <div class="concert-card" data-datetime="2025-09-01T21:00:00">
+      <div class="info">
+        <h2>Arctic Monkeys</h2>
+        <p>Goffertpark – Nijmegen</p>
+        <div class="countdown"></div>
+      </div>
     </div>
-
-  </div>
+  </main>
 </body>
 </html>
