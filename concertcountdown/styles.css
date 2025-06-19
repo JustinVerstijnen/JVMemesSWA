@@ -1,0 +1,26 @@
+body {
+  font-family: sans-serif;
+  background: #f3f4f6;
+  padding: 2rem;
+}
+.concert-list {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 600px;
+  margin: auto;
+}
+.concert {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.concert h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.countdown {
+  font-weight: bold;
+  margin-top: 0.5rem;
+  color: #3b82f6;
+}
