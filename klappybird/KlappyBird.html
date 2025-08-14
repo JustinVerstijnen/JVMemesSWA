@@ -104,6 +104,7 @@
       hi: Number(localStorage.getItem('fb_hi') || 0),
       bird: {x: 0, y: 0, vy: 0, r: BIRD_R * scale},
       pipes: [],
+      gameOverLine: '' // vast gekozen quote voor game over
     };
 
     function updateHiUI(){ document.getElementById('hi').textContent = state.hi; }
@@ -117,6 +118,7 @@
       state.bird.x = BIRD_X();
       state.bird.y = canvas.height / 2;
       state.bird.vy = 0;
+      state.gameOverLine = '';
       state.scene = 'menu';
       draw(0);
     }
@@ -261,17 +263,8 @@
       ctx.font = `${44*scale}px system-ui, sans-serif`;
       ctx.fillText('GAME OVER', canvas.width/2, canvas.height*0.35);
       ctx.font = `${20*scale}px system-ui, sans-serif`;
-      const lines = [
-        'Auw. De buis won. Opnieuw?',
-        'Dat was met opzet, toch? 😉',
-        'Het is niet vallen; het is stijlvol landen.',
-        'Tering man, jij bent hier echt slecht in.',
-        'Loser.',
-        'Je moeder had je door moeten slikken.'
-      ];
-      // kies nu willekeurig bij game over
-      const line = lines[Math.floor(Math.random() * lines.length)];
-      ctx.fillText(line, canvas.width/2, canvas.height*0.42);
+      // toon de eerder gekozen, vaste zin
+      ctx.fillText(state.gameOverLine, canvas.width/2, canvas.height*0.42);
       ctx.font = `${18*scale}px system-ui, sans-serif`;
       ctx.fillText(`Score: ${state.score} — Highscore: ${state.hi}`, canvas.width/2, canvas.height*0.5);
       ctx.fillText('Druk op spatie of 🔁', canvas.width/2, canvas.height*0.56);
@@ -282,6 +275,22 @@
       const closestY = Math.max(ry, Math.min(cy, ry+rh));
       const dx = cx - closestX, dy = cy - closestY;
       return (dx*dx + dy*dy) < r*r;
+    }
+
+    function gameOver(){
+      if(state.scene !== 'gameover'){
+        bonkSound();
+        const lines = [
+          'Auw. De buis won. Opnieuw?',
+          'Dat was met opzet, toch? 😉',
+          'Het is niet vallen; het is stijlvol landen.',
+          'Tering man, jij bent hier echt slecht in.',
+          'Loser.',
+          'Je moeder had je door moeten slikken.'
+        ];
+        state.gameOverLine = lines[Math.floor(Math.random() * lines.length)];
+      }
+      state.scene = 'gameover';
     }
 
     let lastTime = performance.now();
@@ -299,7 +308,9 @@
         for(const p of state.pipes){
           p.x -= PIPE_SPEED*scale*elapsed;
           if(!p.passed && p.x + p.w < BIRD_X()){
-            p.passed = true; state.score++; if(state.score > state.hi){ state.hi = state.score; localStorage.setItem('fb_hi', String(state.hi)); updateHiUI(); } scoreSound();
+            p.passed = true; state.score++;
+            if(state.score > state.hi){ state.hi = state.score; localStorage.setItem('fb_hi', String(state.hi)); updateHiUI(); }
+            scoreSound();
           }
         }
         state.pipes = state.pipes.filter(p => p.x + p.w > -10*scale);
@@ -319,8 +330,6 @@
       } else { draw(); }
       requestAnimationFrame(loop);
     }
-
-    function gameOver(){ if(state.scene !== 'gameover'){ bonkSound(); } state.scene = 'gameover'; }
 
     function draw(){
       drawBG();
