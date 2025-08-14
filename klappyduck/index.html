@@ -104,7 +104,8 @@
       hi: Number(localStorage.getItem('fb_hi') || 0),
       bird: {x: 0, y: 0, vy: 0, r: BIRD_R * scale},
       pipes: [],
-      gameOverLine: '' // vast gekozen quote voor game over
+      gameOverLine: '', // vast gekozen quote voor game over
+      menuJoke: ''
     };
 
     function updateHiUI(){ document.getElementById('hi').textContent = state.hi; }
@@ -119,6 +120,8 @@
       state.bird.y = canvas.height / 2;
       state.bird.vy = 0;
       state.gameOverLine = '';
+      // Kies 1 vaste joke voor het hele menuscherm (geen verspringen per frame)
+      state.menuJoke = jokes[Math.floor(Math.random()*jokes.length)];
       state.scene = 'menu';
       draw(0);
     }
@@ -187,8 +190,6 @@
       'Tip: raak de buis niet. Graag gedaan. 🤓',
       'Wist je dat zwaartekracht een vibe-killer is?',
       'Vandaag op het menu: lucht met gaten.',
-      '69 is de minimale high-score.',
-      'Ego groter dan de vrije ruimte? Probeer dit eens!',
       'Highscore hoger dan je wasmand? Bewijs het.',
       'De vogel heet Piet. Piet is bang voor pijpen.',
       'Pro-tip: minder crashen, meer flappen.',
@@ -306,7 +307,7 @@
         align: 'center'
       });
       // Subregel (joke)
-      drawWrappedText(jokes[(Math.random()*jokes.length)|0], canvas.width/2, canvas.height*0.48, {
+      drawWrappedText(state.menuJoke, canvas.width/2, canvas.height*0.48, {
         maxWidth: canvas.width - 40*scale,
         fontPx: 18,
         lineHeight: 22*scale,
@@ -359,7 +360,7 @@
           'Auw.',
           'Poef.',
           'Verlies je nu expres vanwege mijn mooie burn-quotes? 🔥',
-          'Kom weer niet verder dan 10 en ik ga je uitschelden.',
+          'Kom weer niet verder dan 5 en ik ga je uitschelden.',
           'Dat was met opzet, mag ik hopen? 😉',
           'Het is niet vallen; het is stijlvol landen.',
           'Tering man, jij bent hier echt slecht in.',
@@ -374,11 +375,11 @@
           'Kun je nou helemaal niks?',
           'Ik sta perplex. Dat je dit niet eens kan.',
           'Dit spel is gemaakt om je best te doen, ja?',
-          'Jij kan beter bij de IKEA in de ballenbak gaan spelen.',
+          'Jij kan beter bij de IKEA in de ballenbak gaan spelen',
           'Gefeliciteerd, je zuigt hier in. Je kan nu solliciteren op een management-functie.',
           'Dit spel kost niet eens geld he vriend...',
-          'Heeft iemand je al verteld vandaag dat je het goed doet? Nee? Wellicht morgen.',
-          'Zelfs in Bant zouden ze dit slecht vinden.'
+          'Allahuakbar.',
+          'Zelfs in Bant zouden ze dit slecht vinden'
         ];
         state.gameOverLine = lines[Math.floor(Math.random() * lines.length)];
       }
