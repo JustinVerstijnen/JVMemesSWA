@@ -194,6 +194,52 @@
       'Als je dit wint, krijg je… respect. Misschien dan.'
     ];
 
+    // ======== TEXT WRAPPING/SCALING HELPERS ========
+    function wrapLines(text, maxWidth, fontPx){
+      ctx.save();
+      ctx.font = `${fontPx*scale}px system-ui, sans-serif`;
+      const words = (text+"").split(/\s+/);
+      const lines = [];
+      let line = '';
+      for(const w of words){
+        const test = line ? line + ' ' + w : w;
+        if(ctx.measureText(test).width <= maxWidth){
+          line = test;
+        } else {
+          if(line) lines.push(line);
+          // If single long word still overflows, shrink by breaking mid-word
+          if(ctx.measureText(w).width > maxWidth){
+            let chunk = '';
+            for(const ch of w){
+              const next = chunk + ch;
+              if(ctx.measureText(next).width <= maxWidth){ chunk = next; }
+              else { lines.push(chunk); chunk = ch; }
+            }
+            line = chunk;
+          } else {
+            line = w;
+          }
+        }
+      }
+      if(line) lines.push(line);
+      ctx.restore();
+      return lines;
+    }
+
+    function drawWrappedText(text, x, y, options={}){
+      const { maxWidth = canvas.width - 32*scale, fontPx = 18, lineHeight = 22*scale, align = 'center', color = 'white', shadow = 'rgba(0,0,0,.6)'} = options;
+      ctx.save();
+      ctx.textAlign = align;
+      ctx.textBaseline = 'alphabetic';
+      ctx.font = `${fontPx*scale}px system-ui, sans-serif`;
+      const lines = wrapLines(text, maxWidth, fontPx);
+      // text shadow for readability
+      ctx.fillStyle = shadow; for(let i=0;i<lines.length;i++){ ctx.fillText(lines[i], x+1.5*scale, y+1.5*scale + i*lineHeight); }
+      ctx.fillStyle = color;  for(let i=0;i<lines.length;i++){ ctx.fillText(lines[i], x, y + i*lineHeight); }
+      ctx.restore();
+      return lines.length * lineHeight; // total height drawn
+    }
+
     // --- Drawing ---
     function drawBG(){
       const w=canvas.width, h=canvas.height;
@@ -250,25 +296,49 @@
     function drawMenu(){
       drawBG(); drawPipes(); drawBird(); drawHUD();
       ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.textAlign='center'; ctx.fillStyle='white';
-      ctx.font = `${36*scale}px system-ui, sans-serif`;
-      ctx.fillText('Klik / tik / spatie om te FLAPPEN', canvas.width/2, canvas.height*0.4);
-      ctx.font = `${18*scale}px system-ui, sans-serif`;
-      ctx.fillText(jokes[(Math.random()*jokes.length)|0], canvas.width/2, canvas.height*0.48);
+      // Titel
+      drawWrappedText('Klik / tik / spatie om te FLAPPEN', canvas.width/2, canvas.height*0.35, {
+        maxWidth: canvas.width - 40*scale,
+        fontPx: 32,
+        lineHeight: 36*scale,
+        align: 'center'
+      });
+      // Subregel (joke)
+      drawWrappedText(jokes[(Math.random()*jokes.length)|0], canvas.width/2, canvas.height*0.48, {
+        maxWidth: canvas.width - 40*scale,
+        fontPx: 18,
+        lineHeight: 22*scale,
+        align: 'center'
+      });
     }
 
     function drawGameOver(){
       drawBG(); drawPipes(); drawBird(); drawHUD();
       ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.textAlign='center'; ctx.fillStyle='white';
-      ctx.font = `${44*scale}px system-ui, sans-serif`;
-      ctx.fillText('GAME OVER', canvas.width/2, canvas.height*0.35);
-      ctx.font = `${20*scale}px system-ui, sans-serif`;
-      // toon de eerder gekozen, vaste zin
-      ctx.fillText(state.gameOverLine, canvas.width/2, canvas.height*0.42);
-      ctx.font = `${18*scale}px system-ui, sans-serif`;
-      ctx.fillText(`Score: ${state.score} — Highscore: ${state.hi}`, canvas.width/2, canvas.height*0.5);
-      ctx.fillText('Druk op spatie of 🔁', canvas.width/2, canvas.height*0.56);
+      // Kop
+      drawWrappedText('GAME OVER', canvas.width/2, canvas.height*0.30, {
+        maxWidth: canvas.width - 40*scale,
+        fontPx: 40,
+        lineHeight: 44*scale
+      });
+      // Quote / burn line – nu automatisch afbreken
+      const usedH = drawWrappedText(state.gameOverLine, canvas.width/2, canvas.height*0.38, {
+        maxWidth: canvas.width - 40*scale,
+        fontPx: 20,
+        lineHeight: 24*scale
+      });
+      // Score en hint eronder, met marge na de quote
+      const baseY = canvas.height*0.38 + usedH + 12*scale;
+      drawWrappedText(`Score: ${state.score} — Highscore: ${state.hi}`, canvas.width/2, baseY, {
+        maxWidth: canvas.width - 40*scale,
+        fontPx: 18,
+        lineHeight: 22*scale
+      });
+      drawWrappedText('Druk op spatie of 🔁', canvas.width/2, baseY + 28*scale, {
+        maxWidth: canvas.width - 40*scale,
+        fontPx: 18,
+        lineHeight: 22*scale
+      });
     }
 
     function collideCircleRect(cx, cy, r, rx, ry, rw, rh){
@@ -359,11 +429,16 @@
       if(state.scene === 'gameover') drawGameOver();
       if(state.scene === 'paused'){
         ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.textAlign='center'; ctx.fillStyle='white';
-        ctx.font = `${40*scale}px system-ui, sans-serif`;
-        ctx.fillText('PAUZE', canvas.width/2, canvas.height*0.42);
-        ctx.font = `${18*scale}px system-ui, sans-serif`;
-        ctx.fillText('Druk P of ▶️ om verder te gaan', canvas.width/2, canvas.height*0.5);
+        drawWrappedText('PAUZE', canvas.width/2, canvas.height*0.42, {
+          maxWidth: canvas.width - 40*scale,
+          fontPx: 36,
+          lineHeight: 40*scale
+        });
+        drawWrappedText('Druk P of ▶️ om verder te gaan', canvas.width/2, canvas.height*0.5, {
+          maxWidth: canvas.width - 40*scale,
+          fontPx: 18,
+          lineHeight: 22*scale
+        });
       }
     }
 
