@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Klappy Duck</title>
+  <meta name="description" content="Een grappige, zelf-hostbare Flappy Bird-achtige game in 1 HTML-bestand." />
+  <style>
+    :root { --accent: #ffca3a; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(1000px 500px at 50% -10%, #4cc9f0 0%, #4361ee 40%, #3a0ca3 100%);
+      color: white;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+        "Noto Color Emoji", "Apple Color Emoji", sans-serif;
+    }
+    .container {
+      width: min(560px, 94vw);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+      padding: 18px;
+    }
+    h1 { margin: 0 0 4px 0; font-weight: 900; letter-spacing: 0.3px; text-shadow: 0 2px 0 rgba(0,0,0,.2); }
+    .card {
+      width: 100%;
+      background: rgba(255,255,255,.08);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      padding: 12px 12px 16px;
+    }
+    canvas { width: 100%; height: auto; display: block; background: linear-gradient(#87CEEB,#77BEEB); border-radius: 14px; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+    button { appearance: none; border: 0; border-radius: 999px; padding: 10px 16px; font-weight: 800; cursor: pointer; background: white; color: #111; box-shadow: 0 8px 20px rgba(0,0,0,.25); transition: transform .05s ease; }
+    button:active { transform: translateY(1px) scale(.98); }
+    .small { font-size: .95rem; opacity: .95; display:flex; gap:8px; align-items:center; justify-content:space-between; }
+    .badge { background: rgba(0,0,0,.35); border-radius: 999px; padding: 6px 10px; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🦆 Klappy Duck</h1>
+    <div class="card">
+      <canvas id="game" width="360" height="640" aria-label="Flappy game" role="img"></canvas>
+      <div class="controls">
+        <button id="play">▶️ Start</button>
+        <button id="pause">⏸️ Pauze</button>
+        <button id="restart">🔁 Opnieuw</button>
+      </div>
+      <div class="small" style="margin-top:8px;">
+        <span>Besturing: klik / tik / spatie</span>
+        <span class="badge">🏆 Highscore: <span id="hi">0</span></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    'use strict';
+
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    // --- HiDPI scaling ---
+    let scale = 1;
+    function resizeCanvas() {
+      const ratio = window.devicePixelRatio || 1;
+      const width = canvas.clientWidth;
+      const height = Math.round(width * (canvas.height / canvas.width));
+      canvas.style.height = height + 'px';
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(height * ratio);
+      scale = ratio;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // --- Game constants (scaled) ---
+    const G = 1800;         // gravity px/s^2
+    const JUMP = -520;      // jump impulse px/s
+    const PIPE_SPEED = 180; // px/s
+    const PIPE_GAP = 180;   // px
+    const PIPE_WIDTH = 70;  // px
+    const SPAWN_EVERY = 1.35; // s
+    const BIRD_R = 18;      // px
+    const EMOJI = '🦆';     // badeendje
+    const GROUND_H = 40;    // px
+
+    const BIRD_X = () => canvas.width * 0.32;
+
+    const state = {
+      scene: 'menu', // menu, playing, gameover, paused
+      t: 0,
+      lastSpawn: 0,
+      score: 0,
+      hi: Number(localStorage.getItem('fb_hi') || 0),
+      bird: {x: 0, y: 0, vy: 0, r: BIRD_R * scale},
+      pipes: [],
+    };
+
+    function updateHiUI(){ document.getElementById('hi').textContent = state.hi; }
+    updateHiUI();
+
+    function reset() {
+      state.t = 0;
+      state.lastSpawn = 0;
+      state.score = 0;
+      state.pipes = [];
+      state.bird.x = BIRD_X();
+      state.bird.y = canvas.height / 2;
+      state.bird.vy = 0;
+      state.scene = 'menu';
+      draw(0);
+    }
+
+    // --- Simple WebAudio beeps (no external files) ---
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const audio = new AudioCtx();
+    function beep(freq=600, dur=0.08, type='square', gain=0.02){
+      try{
+        const o = audio.createOscillator();
+        const g = audio.createGain();
+        o.type = type; o.frequency.value = freq; g.gain.value = gain;
+        o.connect(g); g.connect(audio.destination);
+        o.start(); o.stop(audio.currentTime + dur);
+      }catch(e){}
+    }
+    const flapSound = () => { beep(600,0.06,'square',0.03); beep(900,0.04,'square',0.02); };
+    const scoreSound = () => { beep(880,0.08,'triangle',0.035); };
+    const bonkSound = () => { beep(120,0.28,'sawtooth',0.05); };
+
+    // --- Pipe spawn ---
+    function spawnPipe(){
+      const minTop = 80 * scale, minBottom = 120 * scale;
+      const gap = PIPE_GAP * scale;
+      const usable = canvas.height - (minTop + minBottom + gap);
+      const topH = minTop + Math.random() * Math.max(1, usable);
+      const x = canvas.width + PIPE_WIDTH * scale;
+      state.pipes.push({
+        x,
+        top: { y: 0, h: topH },
+        bottom: { y: topH + gap, h: canvas.height - (topH + gap) },
+        w: PIPE_WIDTH * scale,
+        passed: false,
+      });
+    }
+
+    function start(){ if(audio.state === 'suspended'){ audio.resume().catch(()=>{}); } state.scene='playing'; }
+    function pause(){ if(state.scene==='playing'){ state.scene='paused'; } }
+    function resume(){ if(state.scene==='paused'){ state.scene='playing'; } }
+    function restart(){ reset(); start(); }
+
+    // --- Controls ---
+    function flap(){
+      if(state.scene==='menu'){ start(); }
+      if(state.scene==='gameover'){ restart(); return; }
+      if(state.scene==='playing' || state.scene==='menu'){
+        state.bird.vy = JUMP * scale;
+        flapSound();
+      }
+    }
+    document.getElementById('play').addEventListener('click', () => {
+      if(state.scene==='menu'){ start(); } else if(state.scene==='paused'){ resume(); }
+    });
+    document.getElementById('pause').addEventListener('click', () => { if(state.scene==='playing'){ pause(); } });
+    document.getElementById('restart').addEventListener('click', restart);
+
+    window.addEventListener('keydown', (e) => {
+      if(e.code === 'Space'){ e.preventDefault(); flap(); }
+      else if(e.code === 'KeyP'){ if(state.scene==='playing') pause(); else if(state.scene==='paused') resume(); }
+      else if(e.code === 'Enter'){ if(state.scene!=='playing') restart(); }
+    });
+    canvas.addEventListener('mousedown', flap);
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); flap(); }, {passive:false});
+
+    const jokes = [
+      'Tip: raak de buis niet. Graag gedaan. 🤓',
+      'Wist je dat zwaartekracht een vibe-killer is?',
+      'Vandaag op het menu: lucht met gaten.',
+      'Highscore hoger dan je wasmand? Bewijs het.',
+      'De vogel heet Piet. Piet is bang voor pijpen.',
+      'Pro-tip: minder crashen, meer flappen.',
+      'Als je dit wint, krijg je… respect. Misschien.'
+    ];
+
+    // --- Drawing ---
+    function drawBG(){
+      const w=canvas.width, h=canvas.height;
+      const grad = ctx.createLinearGradient(0,0,0,h);
+      grad.addColorStop(0,'#87CEEB');
+      grad.addColorStop(1,'#d0f4f7');
+      ctx.fillStyle = grad; ctx.fillRect(0,0,w,h);
+      // ground
+      ctx.fillStyle = '#C0F0A0';
+      ctx.fillRect(0,h - 40*scale,w, 40*scale);
+      ctx.fillStyle = '#9ddc79';
+      for(let i=0;i<w;i+=20*scale){ ctx.fillRect(i, h-40*scale, 10*scale, 8*scale); }
+    }
+
+    function drawBird(){
+      const b = state.bird;
+      ctx.save();
+      ctx.translate(b.x, b.y);
+      const angle = Math.max(-0.4, Math.min(0.7, b.vy / (800*scale)));
+      ctx.rotate(angle);
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.font = `${Math.round(BIRD_R*2.2*scale)}px Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif`;
+      ctx.fillText(EMOJI, 0, 0);
+      ctx.restore();
+    }
+
+    function drawPipes(){
+      ctx.save();
+      for(const p of state.pipes){
+        ctx.fillStyle = '#2bdc82';
+        ctx.strokeStyle = '#13a65f';
+        ctx.lineWidth = 4*scale;
+        // top
+        ctx.beginPath(); ctx.rect(Math.round(p.x), p.top.y, p.w, p.top.h); ctx.fill(); ctx.stroke();
+        // bottom
+        ctx.beginPath(); ctx.rect(Math.round(p.x), p.bottom.y, p.w, p.bottom.h); ctx.fill(); ctx.stroke();
+        // lips
+        const lipH = 14*scale; ctx.fillStyle = '#25c373';
+        ctx.fillRect(Math.round(p.x - 6*scale), p.top.h - lipH, p.w + 12*scale, lipH);
+        ctx.fillRect(Math.round(p.x - 6*scale), p.bottom.y, p.w + 12*scale, lipH);
+      }
+      ctx.restore();
+    }
+
+    function drawHUD(){
+      ctx.fillStyle = 'rgba(0,0,0,.4)';
+      ctx.font = `${28*scale}px system-ui, sans-serif`;
+      ctx.textAlign='center';
+      ctx.fillText(`Score: ${state.score}`, canvas.width/2, 44*scale);
+      ctx.textAlign='left';
+      ctx.fillText(`🏆 ${state.hi}`, 16*scale, 44*scale);
+    }
+
+    function drawMenu(){
+      drawBG(); drawPipes(); drawBird(); drawHUD();
+      ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.textAlign='center'; ctx.fillStyle='white';
+      ctx.font = `${36*scale}px system-ui, sans-serif`;
+      ctx.fillText('Klik / tik / spatie om te FLAPPEN', canvas.width/2, canvas.height*0.4);
+      ctx.font = `${18*scale}px system-ui, sans-serif`;
+      ctx.fillText(jokes[(Math.random()*jokes.length)|0], canvas.width/2, canvas.height*0.48);
+    }
+
+    function drawGameOver(){
+      drawBG(); drawPipes(); drawBird(); drawHUD();
+      ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.textAlign='center'; ctx.fillStyle='white';
+      ctx.font = `${44*scale}px system-ui, sans-serif`;
+      ctx.fillText('GAME OVER', canvas.width/2, canvas.height*0.35);
+      ctx.font = `${20*scale}px system-ui, sans-serif`;
+      const lines = [
+        'Auw. De buis won. Opnieuw?',
+        'Dat was met opzet, toch? 😉',
+        'Het is niet vallen; het is stijlvol landen.',
+        'Tering man, jij bent hier echt slecht in.',
+        'Loser.',
+        'Je moeder had je door moeten slikken.'
+      ];
+      // kies nu willekeurig bij game over
+      const line = lines[Math.floor(Math.random() * lines.length)];
+      ctx.fillText(line, canvas.width/2, canvas.height*0.42);
+      ctx.font = `${18*scale}px system-ui, sans-serif`;
+      ctx.fillText(`Score: ${state.score} — Highscore: ${state.hi}`, canvas.width/2, canvas.height*0.5);
+      ctx.fillText('Druk op spatie of 🔁', canvas.width/2, canvas.height*0.56);
+    }
+
+    function collideCircleRect(cx, cy, r, rx, ry, rw, rh){
+      const closestX = Math.max(rx, Math.min(cx, rx+rw));
+      const closestY = Math.max(ry, Math.min(cy, ry+rh));
+      const dx = cx - closestX, dy = cy - closestY;
+      return (dx*dx + dy*dy) < r*r;
+    }
+
+    let lastTime = performance.now();
+    function loop(now){
+      const elapsed = Math.min(0.033, (now - lastTime)/1000); // cap dt at ~33ms
+      lastTime = now;
+
+      if(state.scene === 'playing'){
+        state.t += elapsed;
+        state.bird.vy += G*scale*elapsed;
+        state.bird.y += state.bird.vy * elapsed;
+
+        if(state.t - state.lastSpawn > SPAWN_EVERY){ spawnPipe(); state.lastSpawn = state.t; }
+
+        for(const p of state.pipes){
+          p.x -= PIPE_SPEED*scale*elapsed;
+          if(!p.passed && p.x + p.w < BIRD_X()){
+            p.passed = true; state.score++; if(state.score > state.hi){ state.hi = state.score; localStorage.setItem('fb_hi', String(state.hi)); updateHiUI(); } scoreSound();
+          }
+        }
+        state.pipes = state.pipes.filter(p => p.x + p.w > -10*scale);
+
+        const b = state.bird;
+        if(b.y + b.r > canvas.height - GROUND_H*scale){ b.y = canvas.height - GROUND_H*scale - b.r; gameOver(); }
+        else if(b.y - b.r < 0){ b.y = 0 + b.r; state.bird.vy = 0; }
+        else {
+          for(const p of state.pipes){
+            if(collideCircleRect(b.x, b.y, b.r, p.x, p.top.y, p.w, p.top.h) ||
+               collideCircleRect(b.x, b.y, b.r, p.x, p.bottom.y, p.w, p.bottom.h)){
+              gameOver(); break;
+            }
+          }
+        }
+        draw();
+      } else { draw(); }
+      requestAnimationFrame(loop);
+    }
+
+    function gameOver(){ if(state.scene !== 'gameover'){ bonkSound(); } state.scene = 'gameover'; }
+
+    function draw(){
+      drawBG();
+      drawPipes();
+      drawBird();
+      drawHUD();
+      if(state.scene === 'menu') drawMenu();
+      if(state.scene === 'gameover') drawGameOver();
+      if(state.scene === 'paused'){
+        ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.textAlign='center'; ctx.fillStyle='white';
+        ctx.font = `${40*scale}px system-ui, sans-serif`;
+        ctx.fillText('PAUZE', canvas.width/2, canvas.height*0.42);
+        ctx.font = `${18*scale}px system-ui, sans-serif`;
+        ctx.fillText('Druk P of ▶️ om verder te gaan', canvas.width/2, canvas.height*0.5);
+      }
+    }
+
+    reset();
+    requestAnimationFrame(loop);
+  })();
+  </script>
+</body>
+</html>
